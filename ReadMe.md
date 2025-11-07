@@ -1,6 +1,6 @@
-# 🧰 QueueCTL — CLI-based Background Job Queue System
+#  QueueCTL — CLI-based Background Job Queue System
 
-`queuectl` is a **Node.js-based background job queue** that allows you to enqueue, manage, and execute background jobs with retries, persistence, and a Dead Letter Queue (DLQ). It supports background workers, exponential backoff, configurable retry counts, job timeouts, and optional features like job priorities, delayed jobs, metrics, and dashboards.
+`queuectl` **is a Node.js-based background job queue** that lets you add, manage, and run background jobs with retries, persistence, and a Dead Letter Queue (DLQ). It supports background workers, exponential backoff, configurable retry counts, job timeouts, and optional features such as job priorities, delayed jobs, metrics, and dashboards.
 
 ---
 
@@ -14,6 +14,9 @@
 * Background **daemon mode** with PID management
 * Graceful shutdown
 * Optional features:
+   * Web Dashboard & API Endpoints
+   * Deamon Mode
+   * Job timeout handling
 
 
 ---
@@ -21,7 +24,7 @@
 ## ⚙️ Installation
 
 ```bash
-git clone <your_repo_url>
+git clone https://github.com/MayankSahu1005/QueueCTL.git
 cd queuectl
 npm install
 ```
@@ -183,6 +186,43 @@ Each job has a timeout (default 30s). If exceeded, job is terminated and retried
 ---
 
 
+## 🌐 Web Dashboard
+
+The `queuectl` dashboard provides a simple interface to monitor jobs, failed jobs (DLQ), metrics, and worker status.
+
+Start dashboard:
+
+```bash
+node server.js
+```
+
+Open in browser:
+
+```
+http://localhost:4000
+```
+
+Dashboard shows:
+
+* Active Jobs
+* Dead Letter Queue
+* Metrics
+* Worker Status
+
+---
+
+##  API Endpoints
+
+| Endpoint         | Description                                                              |
+| ---------------- | ------------------------------------------------------------------------ |
+| **GET /jobs**    | Lists all active jobs from the `jobs` table.                             |
+| **GET /dlq**     | Lists all permanently failed jobs from the DLQ table.                    |
+| **GET /metrics** | Provides system job metrics (pending, processing, completed, DLQ count). |
+| **GET /workers** | Shows worker daemon status by checking PID file.                         |
+
+Use these endpoints for monitoring, dashboards, or integration with extern
+
+
 ## 📂 Project Structure
 
 ```
@@ -200,6 +240,7 @@ queuectl/
 │   ├── worker.log           # Daemon logs
 │   └── worker.pid           # PID for daemon workers
 ├── migrate.js               # Schema migration helper
+├── server.js               # Web Dashboard and Endpoints
 └── README.md
 ```
 

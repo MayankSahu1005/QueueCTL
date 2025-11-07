@@ -5,11 +5,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "queuectl": "node ./bin/queuectl.js"
-
   },
   "bin": {
-  "queuectl": "./bin/queuectl.js"
-},
+    "queuectl": "./bin/queuectl.js"
+  },
   "keywords": [],
   "author": "Mayank Sahu <mayanksahu1005@gmail.com>",
   "license": "ISC",
@@ -17,6 +16,7 @@
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "commander": "^14.0.2",
+    "express": "^5.1.0",
     "uuid": "^13.0.0"
   }
 }
