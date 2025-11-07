@@ -1,0 +1,22 @@
+{
+  "name": "queuectl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "queuectl": "node ./bin/queuectl.js"
+
+  },
+  "bin": {
+  "queuectl": "./bin/queuectl.js"
+},
+  "keywords": [],
+  "author": "Mayank Sahu <mayanksahu1005@gmail.com>",
+  "license": "ISC",
+  "description": " CLI-based background job queue system built with Node.js ",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "commander": "^14.0.2",
+    "uuid": "^13.0.0"
+  }
+}
