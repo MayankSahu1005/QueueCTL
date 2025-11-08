@@ -15,7 +15,7 @@
 * Graceful shutdown
 * Optional features:
    * Web Dashboard & API Endpoints
-   * Deamon Mode
+   * Daemon Mode
    * Job timeout handling
 
 
@@ -25,7 +25,7 @@
 
 ```bash
 git clone https://github.com/MayankSahu1005/QueueCTL.git
-cd queuectl
+cd QueueCTL
 npm install
 ```
 

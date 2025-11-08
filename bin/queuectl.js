@@ -1,23 +1,27 @@
 #!/usr/bin/env node
 
-const { Command } = require("commander");
+import { Command } from "commander";
+import { enqueueFromJson } from "../lib/cli.js";
+import { WorkerPool } from "../lib/workerManager.js";
+import db from "../lib/db.js";
+import { setConfig, getConfig } from "../lib/config.js";
+import { createWriteStream, mkdirSync, existsSync, writeFileSync, unlinkSync, openSync } from "fs";
+import { join, dirname } from "path";
+import { spawn } from "child_process";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const program = new Command();
-const { enqueueFromJson } = require("../lib/cli");
-const WorkerPool = require("../lib/workerManager");
-const db = require("../lib/db");
-const { setConfig, getConfig } = require("../lib/config");
 
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
 
-/* -------------------------------------------------------
-   LOG REDIRECTION (WORKS IN ALL MODES)
---------------------------------------------------------- */
+// ------------------------------- Log Redirection ----------------------
+
 function redirectLogs(logFilePath) {
-  fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+  mkdirSync(dirname(logFilePath), { recursive: true });
 
-  const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
+  const logStream = createWriteStream(logFilePath, { flags: "a" });
 
   const origLog = console.log;
   const origErr = console.error;
@@ -45,18 +49,14 @@ function redirectLogs(logFilePath) {
   });
 }
 
-/* -------------------------------------------------------
-   CLI SETUP
---------------------------------------------------------- */
+// ---------------------------------- CLI Setup ---------------------------
 
 program
   .name("queuectl")
   .description("Background job queue system")
   .version("1.0.0");
 
-/* -------------------------------------------------------
-   ENQUEUE
---------------------------------------------------------- */
+// --------------------------------- Enqueue -----------------------------------
 
 program
   .command("enqueue")
@@ -66,8 +66,8 @@ program
     try {
       let json = input;
 
-      if (fs.existsSync(input) && input.endsWith(".json")) {
-        json = fs.readFileSync(input, "utf8");
+      if (existsSync(input) && input.endsWith(".json")) {
+        json = readFileSync(input, "utf8");
       }
 
       const job = enqueueFromJson(json);
@@ -81,9 +81,7 @@ program
     }
   });
 
-/* -------------------------------------------------------
-   WORKER START / STOP (WINDOWS SAFE)
---------------------------------------------------------- */
+// ---------------------------------- Worker Start/Stop-----------------------------------
 
 program
   .command("worker")
@@ -92,52 +90,49 @@ program
   .option("--daemon", "run workers in background")
   .description("Start or stop worker processes")
   .action(async (action, opts) => {
-    const dataDir = path.join(__dirname, "..", "data");
-    const pidFile = path.join(dataDir, "worker.pid");
-    const logFile = path.join(dataDir, "worker.log");
-    const stopFile = path.join(dataDir, "worker.stop");
+    const dataDir = join(__dirname, "..", "data");
+    const pidFile = join(dataDir, "worker.pid");
+    const logFile = join(dataDir, "worker.log");
+    const stopFile = join(dataDir, "worker.stop");
 
-    /* -------------------------------
-       STOP WORKERS (Windows safe)
-    --------------------------------*/
+  // --------------------------------- Stop Worker ----------------------------------
     if (action === "stop") {
       console.log("🛑 Stopping workers...");
 
       // create stop signal file
-      fs.writeFileSync(stopFile, "stop");
+      writeFileSync(stopFile, "stop");
 
-      if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile);
+      if (existsSync(pidFile)) unlinkSync(pidFile);
 
       console.log("✅ Stop signal sent (worker.stop created).");
       console.log("Workers will shut down gracefully and log stop event.");
       return;
     }
 
-    /* -------------------------------
-       START WORKERS
-    --------------------------------*/
+    // ----------------------------- Start Worker ---------------------------------------
+
     const count = parseInt(opts.count, 10);
 
-    /* ------------- DAEMON MODE --------------- */
+    // ------------- DAEMON MODE --------------- 
     if (opts.daemon) {
-      fs.mkdirSync(dataDir, { recursive: true });
+      mkdirSync(dataDir, { recursive: true });
 
       console.log(`🟢 Starting ${count} workers in background...`);
 
       const child = spawn(
         process.execPath,
-        [path.join(__dirname, "queuectl.js"), "worker", "start", "--count", String(count)],
+        [join(__dirname, "queuectl.js"), "worker", "start", "--count", String(count)],
         {
           detached: true,
           stdio: [
             "ignore",
-            fs.openSync(logFile, "a"),
-            fs.openSync(logFile, "a")
+            openSync(logFile, "a"),
+            openSync(logFile, "a")
           ]
         }
       );
 
-      fs.writeFileSync(pidFile, String(child.pid));
+      writeFileSync(pidFile, String(child.pid));
       console.log(`✅ Workers started (PID: ${child.pid})`);
       console.log(`📜 Log file: ${logFile}`);
 
@@ -145,21 +140,21 @@ program
       process.exit(0);
     }
 
-    /* ------------- FOREGROUND MODE --------------- */
+    //------------- FOREGROUND MODE --------------- 
     redirectLogs(logFile);
-    fs.mkdirSync(dataDir, { recursive: true });
+    mkdirSync(dataDir, { recursive: true });
 
     // Remove stale stop file
-    if (fs.existsSync(stopFile)) fs.unlinkSync(stopFile);
+    if (existsSync(stopFile)) unlinkSync(stopFile);
 
     console.log(`Starting ${count} workers...`);
 
     const pool = new WorkerPool(count);
     pool.start();
 
-    /* WINDOWS-SAFE STOP — CHECK STOP FILE */
+  
     const checkStop = setInterval(async () => {
-  if (fs.existsSync(stopFile)) {
+  if (existsSync(stopFile)) {
     clearInterval(checkStop);
 
     console.log("Stop signal detected. Stopping workers...");
@@ -176,16 +171,14 @@ program
     await new Promise(() => {});
   });
 
-/* -------------------------------------------------------
-   STATUS
---------------------------------------------------------- */
+//---------------------------------------------- STATUS -------------------------------
 
 program
   .command("status")
   .description("Show worker & job status")
   .action(() => {
-    const dataDir = path.join(__dirname, "..", "data");
-    const pidFile = path.join(dataDir, "worker.pid");
+    const dataDir = join(__dirname, "..", "data");
+    const pidFile = join(dataDir, "worker.pid");
 
     const jobs = db.prepare(
       "SELECT state, COUNT(*) as count FROM jobs GROUP BY state"
@@ -203,9 +196,7 @@ program
     }
   });
 
-/* -------------------------------------------------------
-   LIST JOBS
---------------------------------------------------------- */
+/// ----------------------------------- Job List ------------------------------------
 
 program
   .command("list")
@@ -219,9 +210,7 @@ program
     console.table(rows);
   });
 
-/* -------------------------------------------------------
-   DLQ
---------------------------------------------------------- */
+// -------------------------------------- DLQ ----------------------------------------
 
 program
   .command("dlq")
@@ -249,9 +238,7 @@ program
     console.error("Unknown DLQ command");
   });
 
-/* -------------------------------------------------------
-   CONFIG
---------------------------------------------------------- */
+// ------------------------------------------ COnfiguration----------------------------
 
 program
   .command("config")
