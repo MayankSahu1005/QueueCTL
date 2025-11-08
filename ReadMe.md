@@ -13,8 +13,11 @@
 * Configurable retry & backoff base
 * Background **daemon mode** with PID management
 * Graceful shutdown
-* Optional features:
+* Additional features:
    * Web Dashboard & API Endpoints
+   * Job Scheduling
+   * Job Priority
+   * Job output logging
    * Daemon Mode
    * Job timeout handling
 
@@ -67,19 +70,20 @@ npm install -g .
 
 ## 🧩 CLI Commands Overview
 
-| Command                                        | Description                          |
-| ---------------------------------------------- | ------------------------------------ |
-| `queuectl enqueue <json or file>`              | Add a new job                        |
-| `queuectl worker start [--count N] [--daemon]` | Start workers (optional daemon mode) |
-| `queuectl worker stop`                         | Stop background workers              |
-| `queuectl status`                              | Show system/job status               |
-| `queuectl list [--state STATE]`                | List jobs by state                   |
-| `queuectl dlq list`                            | View DLQ                             |
-| `queuectl dlq retry <id>`                      | Retry DLQ job                        |
-| `queuectl dlq clear`                           | Clear all DLQ jobs                   |
-| `queuectl config set/get`                      | Manage configuration                 |
-| `queuectl logs <jobId>`                        | Show job logs (optional)             |
-| `queuectl metrics`                             | Display system metrics (optional)    |
+| Command                                           | Description                          |
+| --------------------------------------------------| ------------------------------------ |
+| `queuectl enqueue <json or file>`                 | Add a new job                        |
+| `queuectl enqueue <json or file> [--run-at Time]` | Schedule the new job                 |
+| `queuectl enqueue <json or file> [--priority P]`  | Add New job with Priority            |
+| `queuectl worker start [--count N] [--daemon]`    | Start workers (optional daemon mode) |
+| `queuectl worker stop`                            | Stop background workers              |
+| `queuectl status`                                 | Show system/job status               |
+| `queuectl list [--state STATE]`                   | List jobs by state                   |
+| `queuectl dlq list`                               | View DLQ                             |
+| `queuectl dlq retry <id>`                         | Retry DLQ job                        |
+| `queuectl config set/get`                         | Manage configuration                 |
+
+
 
 ---
 
@@ -89,6 +93,17 @@ npm install -g .
 
 ```bash
 queuectl enqueue '{"id":"job1","command":"echo Hello"}'
+```
+### ▶️ Scheduling a job 
+
+```bash
+queuectl enqueue '{"id":"job1","command":"echo Hello"} --run-at 2025-11-08T11:08:30.932Z'
+```
+### ▶️ Enqueue a job with pirority
+priority is an integer, higher the value higher the priority
+
+```bash
+queuectl enqueue '{"id":"job1","command":"echo Hello"}' --priority 100
 ```
 
 ### ▶️ Enqueue from a JSON file
@@ -143,7 +158,7 @@ queuectl status
 ```bash
 queuectl dlq list
 queuectl dlq retry job1
-queuectl dlq clear
+
 ```
 
 ### ▶️ Config
@@ -206,7 +221,6 @@ Dashboard shows:
 
 * Active Jobs
 * Dead Letter Queue
-* Metrics
 * Worker Status
 
 ---
@@ -217,7 +231,6 @@ Dashboard shows:
 | ---------------- | ------------------------------------------------------------------------ |
 | **GET /jobs**    | Lists all active jobs from the `jobs` table.                             |
 | **GET /dlq**     | Lists all permanently failed jobs from the DLQ table.                    |
-| **GET /metrics** | Provides system job metrics (pending, processing, completed, DLQ count). |
 | **GET /workers** | Shows worker daemon status by checking PID file.                         |
 
 Use these endpoints for monitoring, dashboards, or integration with extern
