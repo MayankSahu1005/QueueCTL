@@ -321,15 +321,11 @@ app.get("/", (req, res) => {
 // List all jobs
 app.get("/jobs", (req, res) => {
   const jobs = db.prepare("SELECT * FROM jobs ORDER BY created_at DESC").all();
-  
-  // Format timestamps
+  // Format scheduled_at as ISO string for display
   const formattedJobs = jobs.map(job => ({
     ...job,
-    scheduled_at: job.scheduled_at ? new Date(Number(job.scheduled_at)).toISOString() : null,
-    created_at: job.created_at,
-    updated_at: job.updated_at
+    scheduled_at: job.scheduled_at ? new Date(Number(job.scheduled_at)).toISOString() : null
   }));
-  
   res.json(formattedJobs);
 });
 
