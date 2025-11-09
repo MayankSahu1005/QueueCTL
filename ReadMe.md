@@ -75,6 +75,7 @@ npm install -g .
 | `queuectl enqueue <json or file>`                 | Add a new job                        |
 | `queuectl enqueue <json or file> [--run-at Time]` | Schedule the new job                 |
 | `queuectl enqueue <json or file> [--priority P]`  | Add New job with Priority            |
+| `queuectl enqueue <json or file> [--delay D]`     | Add New job with Delay               |
 | `queuectl worker start [--count N] [--daemon]`    | Start workers (optional daemon mode) |
 | `queuectl worker stop`                            | Stop background workers              |
 | `queuectl status`                                 | Show system/job status               |
@@ -95,9 +96,13 @@ npm install -g .
 queuectl enqueue '{"id":"job1","command":"echo Hello"}'
 ```
 ### ▶️ Scheduling a job 
-
+Scheduling at fixed Time
 ```bash
-queuectl enqueue '{"id":"job1","command":"echo Hello"} --run-at 2025-11-08T11:08:30.932Z'
+queuectl enqueue '{"id":"job1","command":"echo Hello"}' --run-at 2025-11-08T11:08:30.932Z
+```
+Scheduling with delay in seconds
+```bash
+queuectl enqueue '{"id":"job1","command":"echo Hello"}' --delay 10
 ```
 ### ▶️ Enqueue a job with pirority
 priority is an integer, higher the value higher the priority
@@ -232,6 +237,7 @@ Dashboard shows:
 | **GET /jobs**    | Lists all active jobs from the `jobs` table.                             |
 | **GET /dlq**     | Lists all permanently failed jobs from the DLQ table.                    |
 | **GET /workers** | Shows worker daemon status by checking PID file.                         |
+| **GET /metrics** | Shows jobs by States                                                     |
 
 Use these endpoints for monitoring, dashboards, or integration with extern
 

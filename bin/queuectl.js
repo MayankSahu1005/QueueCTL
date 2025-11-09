@@ -325,19 +325,18 @@ program
         db.prepare("DELETE FROM dlq WHERE id = ?").run(id);
 
         // Requeue the job
-        db.prepare(`
-          INSERT INTO jobs (
-            id, command, state, attempts, max_retries, 
-            created_at, updated_at, scheduled_at
-          ) VALUES (?, ?, 'pending', 0, ?, ?, ?, ?)
-        `).run(
-          dlqJob.id,
-          dlqJob.command,
-          dlqJob.max_retries,
-          new Date().toISOString(),
-          new Date().toISOString(),
-          Date.now()
-        );
+       db.prepare(`
+    UPDATE jobs 
+    SET state = 'pending',
+        attempts = 0,
+        updated_at = ?,
+        scheduled_at = ?
+    WHERE id = ?
+  `).run(
+    new Date().toISOString(),
+    Date.now(),
+    id
+  );
       })();
 
       console.log(`✅ Job ${id} requeued from DLQ`);
