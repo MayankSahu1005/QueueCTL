@@ -78,20 +78,22 @@ program
 
       const job = JSON.parse(json);
 
-     
       // Sets priority of job
       if (opts.priority !== undefined) {
-  job.priority = Number(opts.priority);
-} else if (job.priority === undefined) {
-  job.priority = 0; // default
-}
+        job.priority = Number(opts.priority);
+      } else if (job.priority === undefined) {
+        job.priority = 0; // default
+      }
 
-     const now = Date.now();
-      // Scheduling logic
-      if (opts.runAt) {
-        job.scheduled_at = new Date(opts.runAt).getTime();
-      } else if (opts.delay) {
-        job.scheduled_at = now + Number(opts.delay) * 1000;
+      const now = Date.now();
+      // Scheduling logic - handle both kebab-case and camelCase
+      const runAtTime = opts.runAt || opts['run-at'];
+      const delaySeconds = opts.delay;
+      
+      if (runAtTime) {
+        job.scheduled_at = new Date(runAtTime).getTime();
+      } else if (delaySeconds) {
+        job.scheduled_at = now + Number(delaySeconds) * 1000;
       } else {
         // default behavior (old behavior)
         job.scheduled_at = now;

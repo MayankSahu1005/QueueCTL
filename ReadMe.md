@@ -30,22 +30,17 @@
 git clone https://github.com/MayankSahu1005/QueueCTL.git
 cd QueueCTL
 npm install
-```
-
----
-
-## 🧩 Making `queuectl` a Global CLI Command
-
-To run commands directly like `queuectl enqueue job.json` instead of `npm run queuectl`, follow these steps:
-
-
-Run this in your project root:
-
-```bash
 npm install -g .
 ```
 
-###  Verify
+---
+### After Installation for Complete testing :
+
+```bash
+node test-queuectl.js
+```
+
+###  Help
 
 ```bash
 queuectl --help
